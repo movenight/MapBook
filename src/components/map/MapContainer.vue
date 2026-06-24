@@ -11,7 +11,6 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
 import { useTripStore } from '@/stores/tripStore'
 import { loadAMap } from '@/services/amap'
-import { reverseGeocode } from '@/services/amapHttp'
 import type { WaypointType } from '@/types/waypoint'
 import MapSearch from './MapSearch.vue'
 import MapContextMenu from './MapContextMenu.vue'
@@ -79,11 +78,24 @@ async function addWaypointAtPosition(lng: number, lat: number, wpType: string = 
   let address = ''
 
   try {
-    const result = await reverseGeocode(lng, lat)
-    name = result.name || ''
-    address = result.address || ''
+    const AMap = await loadAMap()
+    const geocoder = new AMap.Geocoder()
+    const result = await new Promise<{ name: string; address: string }>((resolve) => {
+      geocoder.getAddress([lng, lat], (status: string, res: any) => {
+        if (status === 'complete' && res?.regeocode) {
+          const addr = res.regeocode.formattedAddress || ''
+          const pois = res.regeocode.pois || []
+          const poiName = pois.length > 0 ? pois[0].name : ''
+          resolve({ name: poiName || addr, address: addr })
+        } else {
+          resolve({ name: '', address: '' })
+        }
+      })
+    })
+    name = result.name
+    address = result.address
   } catch {
-    // fallback below
+    // fallback
   }
 
   if (!name) {

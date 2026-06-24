@@ -8,11 +8,13 @@ export async function loadAMap(): Promise<any> {
   if (AMapInstance) return AMapInstance
 
   const key = import.meta.env.VITE_AMAP_KEY
+  const secret = import.meta.env.VITE_AMAP_SECRET
+
   if (!key) {
-    throw new Error('请在 .env 文件中设置 VITE_AMAP_KEY')
+    throw new Error('请在 .env 文件中设置 VITE_AMAP_KEY 和 VITE_AMAP_SECRET')
   }
 
-  AMapInstance = await AMapLoader.load({
+  const opts: Record<string, any> = {
     key,
     version: '2.0',
     plugins: [
@@ -23,7 +25,13 @@ export async function loadAMap(): Promise<any> {
       'AMap.Walking',
       'AMap.Riding',
     ],
-  })
+  }
+
+  if (secret) {
+    opts.securityJsCode = secret
+  }
+
+  AMapInstance = await AMapLoader.load(opts as any)
 
   return AMapInstance
 }

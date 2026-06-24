@@ -7,7 +7,6 @@ import { watch, ref } from 'vue'
 import { useTripStore } from '@/stores/tripStore'
 import { useMapStore } from '@/stores/mapStore'
 import { loadAMap } from '@/services/amap'
-import { drivingRoute } from '@/services/amapHttp'
 import { ROUTE_COLORS, WAYPOINT_TYPE_ICONS } from '@/utils/constants'
 
 const tripStore = useTripStore()
@@ -21,7 +20,7 @@ watch(
   () => tripStore.waypointsByDay,
   () => {
     if (routeTimer) clearTimeout(routeTimer)
-    routeTimer = setTimeout(() => drawRoutesAndMarkers(), 600)
+    routeTimer = setTimeout(() => drawRoutesAndMarkers(), 800)
   },
   { deep: true }
 )
@@ -56,16 +55,8 @@ async function drawRoutesAndMarkers() {
     }
 
     if (sorted.length >= 2) {
-      const origin = { lng: sorted[0].lng, lat: sorted[0].lat }
-      const dest = { lng: sorted[sorted.length - 1].lng, lat: sorted[sorted.length - 1].lat }
-      const via = sorted.slice(1, -1).map((wp) => ({ lng: wp.lng, lat: wp.lat }))
-
-      try {
-        const route = await drivingRoute(origin, dest, via)
-        totalDistance += route.distance
-        totalDuration += route.duration
-
-        const path = route.polyline.map(([lng, lat]) => new AMap.LngLat(lng, lat))
+      const path = await getRoutePath(AMap, sorted)
+      if (path) {
         const polylineEl = new AMap.Polyline({
           path,
           strokeColor: color,
@@ -75,7 +66,7 @@ async function drawRoutesAndMarkers() {
         })
         map.add(polylineEl)
         polylines.value.push(polylineEl)
-      } catch {
+      } else {
         const fallbackPath = sorted.map((wp) => new AMap.LngLat(wp.lng, wp.lat))
         const polylineEl = new AMap.Polyline({
           path: fallbackPath,
@@ -92,6 +83,39 @@ async function drawRoutesAndMarkers() {
 
   tripStore.totalDistance = totalDistance
   tripStore.totalDuration = totalDuration
+}
+
+function getRoutePath(
+  AMap: any,
+  sorted: { lng: number; lat: number }[]
+): Promise<any[] | null> {
+  return new Promise((resolve) => {
+    const origin = new AMap.LngLat(sorted[0].lng, sorted[0].lat)
+    const dest = new AMap.LngLat(sorted[sorted.length - 1].lng, sorted[sorted.length - 1].lat)
+    const via = sorted.slice(1, -1).map((wp) => new AMap.LngLat(wp.lng, wp.lat))
+
+    const driving = new AMap.Driving({ policy: 0 })
+
+    const opts = via.length > 0 ? { waypoints: via } : {}
+
+    driving.search(origin, dest, opts, (status: string, result: any) => {
+      if (status === 'complete' && result?.routes?.length > 0) {
+        const route = result.routes[0]
+        const path: any[] = []
+        for (const step of route.steps || []) {
+          const stepPath = step.path || []
+          for (const p of stepPath) {
+            path.push(new AMap.LngLat(p.lng, p.lat))
+          }
+        }
+        tripStore.totalDistance = route.distance || 0
+        tripStore.totalDuration = route.time || 0
+        resolve(path)
+      } else {
+        resolve(null)
+      }
+    })
+  })
 }
 
 function clearOverlays() {
