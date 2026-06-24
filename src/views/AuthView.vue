@@ -1,8 +1,8 @@
 <template>
   <div class="auth-view">
     <div class="auth-card">
-      <h2>登录 MapBook</h2>
-      <el-form @submit.prevent="handleLogin">
+      <h2>{{ isRegister ? '注册' : '登录' }} MapBook</h2>
+      <el-form>
         <el-form-item>
           <el-input v-model="email" placeholder="邮箱" type="email" size="large" />
         </el-form-item>
@@ -10,14 +10,15 @@
           <el-input v-model="password" placeholder="密码" type="password" size="large" show-password />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" size="large" :loading="loading" native-type="submit" style="width: 100%">
-            登录
+          <el-button type="primary" size="large" :loading="loading" style="width: 100%" @click="handleSubmit">
+            {{ isRegister ? '注册' : '登录' }}
           </el-button>
         </el-form-item>
       </el-form>
+      <el-alert v-if="errorMsg" :title="errorMsg" type="error" show-icon :closable="false" style="margin-bottom: 16px" />
       <p class="auth-toggle">
-        还没有账号？
-        <el-button link type="primary" @click="isRegister = !isRegister">
+        {{ isRegister ? '已有账号？' : '还没有账号？' }}
+        <el-button link type="primary" @click="isRegister = !isRegister; errorMsg = ''">
           {{ isRegister ? '去登录' : '去注册' }}
         </el-button>
       </p>
@@ -35,16 +36,28 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const isRegister = ref(false)
+const errorMsg = ref('')
 
-async function handleLogin() {
+async function handleSubmit() {
+  errorMsg.value = ''
+  if (!email.value || !password.value) {
+    errorMsg.value = '请填写邮箱和密码'
+    return
+  }
+
   loading.value = true
   try {
-    if (isRegister.value) {
-      await supabase.auth.signUp({ email: email.value, password: password.value })
-    } else {
-      await supabase.auth.signInWithPassword({ email: email.value, password: password.value })
+    const { error } = isRegister.value
+      ? await supabase.auth.signUp({ email: email.value, password: password.value })
+      : await supabase.auth.signInWithPassword({ email: email.value, password: password.value })
+
+    if (error) {
+      errorMsg.value = error.message
+      return
     }
     router.push('/trips')
+  } catch (err: any) {
+    errorMsg.value = err?.message || '请求失败，请检查网络'
   } finally {
     loading.value = false
   }

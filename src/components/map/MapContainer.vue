@@ -9,15 +9,19 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
+import { useTripStore } from '@/stores/tripStore'
 import { loadAMap } from '@/services/amap'
+import type { WaypointType } from '@/types/waypoint'
 import MapSearch from './MapSearch.vue'
 import MapContextMenu from './MapContextMenu.vue'
 import MapRouteLine from './MapRouteLine.vue'
 
 const mapRef = ref<HTMLDivElement>()
 const mapStore = useMapStore()
+const tripStore = useTripStore()
 const contextMenu = ref({ visible: false, x: 0, y: 0 })
 let mapInstance: AMap.Map | null = null
+let lastClickLnglat: [number, number] | null = null
 
 onMounted(async () => {
   const AMap = await loadAMap()
@@ -31,14 +35,22 @@ onMounted(async () => {
 
   mapStore.setMapInstance(mapInstance)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mapInstance!.on('rightclick', (e: any) => {
-    contextMenu.value = { visible: true, x: e.pixel.x, y: e.pixel.y }
-    mapStore.setClickPosition([e.lnglat.getLng(), e.lnglat.getLat()])
+    lastClickLnglat = [e.lnglat.getLng(), e.lnglat.getLat()]
+    contextMenu.value = {
+      visible: true,
+      x: e.pixel.x,
+      y: e.pixel.y,
+    }
+    mapStore.setClickPosition(lastClickLnglat)
   })
 
-  mapInstance!.on('click', () => {
+  mapInstance!.on('click', (e: any) => {
     contextMenu.value.visible = false
+    const lng = e.lnglat.getLng()
+    const lat = e.lnglat.getLat()
+    lastClickLnglat = [lng, lat]
+    addWaypointAtPosition(lng, lat)
   })
 })
 
@@ -48,19 +60,40 @@ onUnmounted(() => {
 })
 
 function onSearchSelect(poi: { lng: number; lat: number; name: string; address: string }) {
-  mapStore.addWaypoint({
-    lng: poi.lng,
-    lat: poi.lat,
+  tripStore.addWaypoint({
+    id: crypto.randomUUID(),
+    tripId: tripStore.currentTrip.id,
+    dayIndex: tripStore.activeDayIndex,
+    orderIndex: 0,
     name: poi.name,
     address: poi.address,
+    lng: poi.lng,
+    lat: poi.lat,
+    type: 'waypoint',
+    notes: '',
   })
 }
 
 function onContextMenuSelect(type: string) {
   contextMenu.value.visible = false
-  const pos = mapStore.clickPosition
+  const pos = lastClickLnglat
   if (!pos) return
-  mapStore.addWaypoint({ lng: pos[0], lat: pos[1], name: '', address: '' })
+  addWaypointAtPosition(pos[0], pos[1], type)
+}
+
+function addWaypointAtPosition(lng: number, lat: number, wpType: string = 'waypoint') {
+  tripStore.addWaypoint({
+    type: wpType as WaypointType,
+    id: crypto.randomUUID(),
+    tripId: tripStore.currentTrip.id,
+    dayIndex: tripStore.activeDayIndex,
+    orderIndex: 0,
+    name: '',
+    address: '',
+    lng,
+    lat,
+    notes: '',
+  })
 }
 </script>
 
