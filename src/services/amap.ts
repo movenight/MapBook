@@ -1,29 +1,12 @@
-let AMapInstance: any = null
-
 export async function loadAMap(): Promise<any> {
-  if (AMapInstance) return AMapInstance
+  const win = window as any
+  if (win.AMap) return win.AMap
 
-  return new Promise((resolve, reject) => {
-    const win = window as any
+  await win._amapReady
 
-    if (win.AMap) {
-      AMapInstance = win.AMap
-      resolve(AMapInstance)
-      return
-    }
+  if (!win.AMap) {
+    throw new Error('AMap SDK 加载失败')
+  }
 
-    let attempts = 0
-    const maxAttempts = 150
-    const interval = setInterval(() => {
-      attempts++
-      if (win.AMap) {
-        clearInterval(interval)
-        AMapInstance = win.AMap
-        resolve(AMapInstance)
-      } else if (attempts >= maxAttempts) {
-        clearInterval(interval)
-        reject(new Error('AMap SDK 加载超时'))
-      }
-    }, 100)
-  })
+  return win.AMap
 }

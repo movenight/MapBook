@@ -6,14 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MapBook - 路书规划</title>
     <script>
-      window.__AMAP_LOADED__ = false
-      window.__AMAP_LOAD_CALLBACK__ = function () {
-        window.__AMAP_LOADED__ = true
-      }
+      window._amapReady = new Promise((resolve) => {
+        window._amapCb = resolve
+      })
     </script>
     <script
-      src="https://webapi.amap.com/v2/maps?key=5520209b434b9cbeb21a05e198ce24a5&plugin=AMap.Geocoder,AMap.AutoComplete,AMap.PlaceSearch,AMap.Driving,AMap.Walking,AMap.Riding&jscode=06387528047b7d9ffe55139999b6492b&callback=__AMAP_LOAD_CALLBACK__"
-      async
+      src="https://webapi.amap.com/v2/maps?key=5520209b434b9cbeb21a05e198ce24a5&plugin=AMap.Geocoder,AMap.AutoComplete,AMap.PlaceSearch,AMap.Driving,AMap.Walking,AMap.Riding&jscode=06387528047b7d9ffe55139999b6492b&callback=_amapCb"
+      defer
     ></script>
   </head>
   <body>
