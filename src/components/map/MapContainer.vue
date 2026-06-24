@@ -37,11 +37,7 @@ onMounted(async () => {
 
   mapInstance!.on('rightclick', (e: any) => {
     lastClickLnglat = [e.lnglat.getLng(), e.lnglat.getLat()]
-    contextMenu.value = {
-      visible: true,
-      x: e.pixel.x,
-      y: e.pixel.y,
-    }
+    contextMenu.value = { visible: true, x: e.pixel.x, y: e.pixel.y }
     mapStore.setClickPosition(lastClickLnglat)
   })
 
@@ -87,23 +83,29 @@ async function addWaypointAtPosition(lng: number, lat: number, wpType: string = 
 
   try {
     const AMap = await loadAMap()
-    const geocoder = new AMap.Geocoder()
+    const geocoder = new AMap.Geocoder({ radius: 1000 })
+    const pos = new AMap.LngLat(lng, lat)
+
     const result = await new Promise<{ name: string; address: string }>((resolve) => {
-      geocoder.getAddress([lng, lat], (_status: string, res: any) => {
-        if (res?.regeocode) {
+      geocoder.getAddress(pos, (status: string, res: any) => {
+        if (status === 'complete' && res?.regeocode) {
           const addr = res.regeocode.formattedAddress || ''
           const pois = res.regeocode.pois || []
           const poiName = pois.length > 0 ? pois[0].name : ''
           resolve({ name: poiName || addr, address: addr })
         } else {
-          resolve({ name: '', address: '' })
+          resolve({ name: `${lng.toFixed(5)}, ${lat.toFixed(5)}`, address: '' })
         }
       })
     })
     name = result.name
     address = result.address
   } catch {
-    // geocoding failed, use empty name
+    name = `${lng.toFixed(5)}, ${lat.toFixed(5)}`
+  }
+
+  if (!name) {
+    name = `${lng.toFixed(5)}, ${lat.toFixed(5)}`
   }
 
   tripStore.addWaypoint({
