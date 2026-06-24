@@ -1,37 +1,29 @@
-import AMapLoader from '@amap/amap-jsapi-loader'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let AMapInstance: any = null
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadAMap(): Promise<any> {
   if (AMapInstance) return AMapInstance
 
-  const key = import.meta.env.VITE_AMAP_KEY
-  const secret = import.meta.env.VITE_AMAP_SECRET
+  return new Promise((resolve, reject) => {
+    const win = window as any
 
-  if (!key) {
-    throw new Error('请在 .env 文件中设置 VITE_AMAP_KEY 和 VITE_AMAP_SECRET')
-  }
+    if (win.AMap) {
+      AMapInstance = win.AMap
+      resolve(AMapInstance)
+      return
+    }
 
-  const opts: Record<string, any> = {
-    key,
-    version: '2.0',
-    plugins: [
-      'AMap.Geocoder',
-      'AMap.AutoComplete',
-      'AMap.PlaceSearch',
-      'AMap.Driving',
-      'AMap.Walking',
-      'AMap.Riding',
-    ],
-  }
-
-  if (secret) {
-    opts.securityJsCode = secret
-  }
-
-  AMapInstance = await AMapLoader.load(opts as any)
-
-  return AMapInstance
+    let attempts = 0
+    const maxAttempts = 150
+    const interval = setInterval(() => {
+      attempts++
+      if (win.AMap) {
+        clearInterval(interval)
+        AMapInstance = win.AMap
+        resolve(AMapInstance)
+      } else if (attempts >= maxAttempts) {
+        clearInterval(interval)
+        reject(new Error('AMap SDK 加载超时'))
+      }
+    }, 100)
+  })
 }

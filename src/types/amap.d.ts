@@ -1,3 +1,9 @@
+declare global {
+  interface Window {
+    AMap: typeof AMap
+  }
+}
+
 declare namespace AMap {
   class Map {
     constructor(container: string | HTMLElement, opts?: MapOptions)
