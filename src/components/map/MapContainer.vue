@@ -81,15 +81,39 @@ function onContextMenuSelect(type: string) {
   addWaypointAtPosition(pos[0], pos[1], type)
 }
 
-function addWaypointAtPosition(lng: number, lat: number, wpType: string = 'waypoint') {
+async function addWaypointAtPosition(lng: number, lat: number, wpType: string = 'waypoint') {
+  let name = ''
+  let address = ''
+
+  try {
+    const AMap = await loadAMap()
+    const geocoder = new AMap.Geocoder()
+    const result = await new Promise<{ name: string; address: string }>((resolve) => {
+      geocoder.getAddress([lng, lat], (_status: string, res: any) => {
+        if (res?.regeocode) {
+          const addr = res.regeocode.formattedAddress || ''
+          const pois = res.regeocode.pois || []
+          const poiName = pois.length > 0 ? pois[0].name : ''
+          resolve({ name: poiName || addr, address: addr })
+        } else {
+          resolve({ name: '', address: '' })
+        }
+      })
+    })
+    name = result.name
+    address = result.address
+  } catch {
+    // geocoding failed, use empty name
+  }
+
   tripStore.addWaypoint({
     type: wpType as WaypointType,
     id: crypto.randomUUID(),
     tripId: tripStore.currentTrip.id,
     dayIndex: tripStore.activeDayIndex,
     orderIndex: 0,
-    name: '',
-    address: '',
+    name,
+    address,
     lng,
     lat,
     notes: '',
