@@ -11,6 +11,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
 import { useTripStore } from '@/stores/tripStore'
 import { loadAMap } from '@/services/amap'
+import { reverseGeocode } from '@/services/amapHttp'
 import type { WaypointType } from '@/types/waypoint'
 import MapSearch from './MapSearch.vue'
 import MapContextMenu from './MapContextMenu.vue'
@@ -43,10 +44,7 @@ onMounted(async () => {
 
   mapInstance!.on('click', (e: any) => {
     contextMenu.value.visible = false
-    const lng = e.lnglat.getLng()
-    const lat = e.lnglat.getLat()
-    lastClickLnglat = [lng, lat]
-    addWaypointAtPosition(lng, lat)
+    addWaypointAtPosition(e.lnglat.getLng(), e.lnglat.getLat())
   })
 })
 
@@ -72,9 +70,8 @@ function onSearchSelect(poi: { lng: number; lat: number; name: string; address: 
 
 function onContextMenuSelect(type: string) {
   contextMenu.value.visible = false
-  const pos = lastClickLnglat
-  if (!pos) return
-  addWaypointAtPosition(pos[0], pos[1], type)
+  if (!lastClickLnglat) return
+  addWaypointAtPosition(lastClickLnglat[0], lastClickLnglat[1], type)
 }
 
 async function addWaypointAtPosition(lng: number, lat: number, wpType: string = 'waypoint') {
@@ -82,26 +79,11 @@ async function addWaypointAtPosition(lng: number, lat: number, wpType: string = 
   let address = ''
 
   try {
-    const AMap = await loadAMap()
-    const geocoder = new AMap.Geocoder({ radius: 1000 })
-    const pos = new AMap.LngLat(lng, lat)
-
-    const result = await new Promise<{ name: string; address: string }>((resolve) => {
-      geocoder.getAddress(pos, (status: string, res: any) => {
-        if (status === 'complete' && res?.regeocode) {
-          const addr = res.regeocode.formattedAddress || ''
-          const pois = res.regeocode.pois || []
-          const poiName = pois.length > 0 ? pois[0].name : ''
-          resolve({ name: poiName || addr, address: addr })
-        } else {
-          resolve({ name: `${lng.toFixed(5)}, ${lat.toFixed(5)}`, address: '' })
-        }
-      })
-    })
-    name = result.name
-    address = result.address
+    const result = await reverseGeocode(lng, lat)
+    name = result.name || ''
+    address = result.address || ''
   } catch {
-    name = `${lng.toFixed(5)}, ${lat.toFixed(5)}`
+    // fallback below
   }
 
   if (!name) {
