@@ -1,33 +1,45 @@
 <template>
-  <div class="empty-state">
-    <div class="empty-icon">📭</div>
-    <p class="empty-text">{{ message }}</p>
-  </div>
+  <view class="empty-state">
+    <text class="empty-state__icon">{{ icon }}</text>
+    <text class="empty-state__message">{{ message }}</text>
+    <view v-if="$slots.default" class="empty-state__extra">
+      <slot />
+    </view>
+  </view>
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  message: string
-}>()
+withDefaults(
+  defineProps<{
+    message: string
+    icon?: string
+  }>(),
+  { icon: '📭' }
+)
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 96rpx $mb-gap-lg;
 }
 
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+.empty-state__icon {
+  font-size: 80rpx;
+  line-height: 1;
 }
 
-.empty-text {
-  font-size: 14px;
-  color: #999;
-  margin: 0;
+.empty-state__message {
+  margin-top: $mb-gap-md;
+  font-size: 28rpx;
+  color: $mb-text-disabled;
+  text-align: center;
+}
+
+.empty-state__extra {
+  margin-top: $mb-gap-lg;
 }
 </style>

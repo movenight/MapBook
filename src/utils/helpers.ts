@@ -1,26 +1,19 @@
-export function formatDistance(meters: number): string {
-  if (meters < 1000) return `${meters}m`
-  return `${(meters / 1000).toFixed(1)}km`
+/** 生成一个本地唯一 ID（云开发 _id 由服务端生成，这里用于乐观更新） */
+export function generateId(): string {
+  const rand = Math.random().toString(36).slice(2, 10)
+  return `${Date.now().toString(36)}-${rand}`
 }
 
-export function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0) return `${h}h${m}min`
-  return `${m}min`
-}
-
-export function debounce<T extends (...args: unknown[]) => void>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timer: ReturnType<typeof setTimeout>
+/** 简单防抖 */
+export function debounce<T extends (...args: any[]) => void>(fn: T, wait: number) {
+  let timer: ReturnType<typeof setTimeout> | null = null
   return (...args: Parameters<T>) => {
-    clearTimeout(timer)
-    timer = setTimeout(() => fn(...args), delay)
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => fn(...args), wait)
   }
 }
 
-export function generateId(): string {
-  return crypto.randomUUID()
+/** 数值裁剪到 [min, max] */
+export function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
 }

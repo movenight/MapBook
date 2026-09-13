@@ -1,0 +1,70 @@
+/**
+ * MapBook 全局设计变量
+ *
+ * uni-app 约定：此文件中的变量在每个组件的 <style lang="scss"> 中可直接使用，
+ * 无需手动 @import。
+ */
+
+/* ---- 主色板（沿用原 Web 端配色，与高德蓝一致） ---- */
+$mb-primary: #1677ff;
+$mb-success: #52c41a;
+$mb-warning: #faad14;
+$mb-danger: #ff4d4f;
+
+/* ---- 文字 ---- */
+$mb-text-primary: #1f1f1f;
+$mb-text-secondary: #666666;
+$mb-text-disabled: #999999;
+$mb-text-inverse: #ffffff;
+
+/* ---- 背景 ---- */
+$mb-bg-white: #ffffff;
+$mb-bg-light: #f5f5f5;
+$mb-bg-lighter: #fafafa;
+
+/* ---- 描边 ---- */
+$mb-border: #e8e8e8;
+$mb-border-light: #f0f0f0;
+
+/* ---- 圆角 ---- */
+$mb-radius-sm: 8rpx;
+$mb-radius-md: 16rpx;
+$mb-radius-lg: 24rpx;
+
+/* ---- 间距 ---- */
+$mb-gap-xs: 8rpx;
+$mb-gap-sm: 16rpx;
+$mb-gap-md: 24rpx;
+$mb-gap-lg: 32rpx;
+$mb-gap-xl: 48rpx;
+
+/* ---- Day 路线配色（按天循环使用） ---- */
+$mb-route-color-1: #1677ff;
+$mb-route-color-2: #52c41a;
+$mb-route-color-3: #faad14;
+$mb-route-color-4: #ff4d4f;
+$mb-route-color-5: #722ed1;
+$mb-route-color-6: #13c2c2;
+$mb-route-color-7: #eb2f96;
+$mb-route-color-8: #2f54eb;
+
+/* ---- 覆盖 uni-app 内置主色 ---- */
+$uni-color-primary: $mb-primary;
+
+/*
+ * 两点跨端布局约定（踩过的坑，改动时注意）：
+ *
+ * 1. 页面满高不要写 100vh。
+ *    H5 下页面内容区在 uni-app 导航栏之下，100vh 会多出一个导航栏的高度，
+ *    把内容顶出视口。用：
+ *      height: calc(100vh - var(--window-top, 0px) - var(--window-bottom, 0px))
+ *    --window-top / --window-bottom 在 H5 有值，小程序里回退 0px，两端都对。
+ *
+ * 2. uni.scss 里只放变量，不要放 mixin。
+ *    本文件只被注入到组件样式的变量作用域，组件里 @include 会报
+ *    "Undefined mixin"。需要复用的样式请写进组件的 <style> 里。
+ *
+ * 3. <text> 默认是 inline，竖排文本要显式 display: block，
+ *    否则会挤成一行且 margin-top 失效。
+ */
+

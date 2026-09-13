@@ -7,3 +7,5 @@ dist/
 .vscode/
 .idea/
 tsconfig.tsbuildinfo
+.zcode/
+.mp-shots/
