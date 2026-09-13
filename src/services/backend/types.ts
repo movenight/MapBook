@@ -61,13 +61,23 @@ export interface Backend {
   deleteWaypoints(ids: string[]): Promise<void>
 }
 
-/** 后端调用失败的统一错误类型，便于 UI 区分展示 */
+/**
+ * 后端调用失败的统一错误类型，便于 UI 区分展示。
+ *
+ * 构造时会把 cause 的 message 拼进 message —— 否则界面只能显示
+ * 「读取路书列表失败」这种外层描述，用户看不到真正的原因
+ * （比如环境变量没配），排查成本很高。
+ */
 export class BackendError extends Error {
+  readonly detail: string
+
   constructor(
     message: string,
     readonly cause?: unknown
   ) {
-    super(message)
+    const detail = cause instanceof Error ? cause.message : cause ? String(cause) : ''
+    super(detail ? `${message}（${detail}）` : message)
     this.name = 'BackendError'
+    this.detail = detail
   }
 }

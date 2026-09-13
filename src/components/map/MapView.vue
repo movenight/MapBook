@@ -248,9 +248,17 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+/*
+ * 高度靠 100%（父级给宿主节点定高），不能用 flex:1。
+ * 小程序端 uni-app 会给自定义组件套一层宿主节点且高度为 auto，宿主不是 flex
+ * 容器，写在这里的 flex:1 会完全失效 → 本元素塌成 0 高，而 <map> 是
+ * position:absolute，于是填进一个 0 高的盒子，地图整块不可见。
+ * 定高由父级的 .editor__map 类（落在宿主节点上）提供。
+ */
 .map-view {
   position: relative;
-  flex: 1;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 

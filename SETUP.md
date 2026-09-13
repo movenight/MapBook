@@ -81,6 +81,34 @@ https://restapi.amap.com
 | `npm run build:mp-weixin` | 小程序生产构建（产物 `dist/build/mp-weixin`） |
 | `npm run type-check` | TypeScript 类型检查 |
 | `node scripts/gen-marker-icons.mjs` | 重新生成地图 marker 图标 |
+| `node scripts/mp-check.mjs` | 小程序端自动验收（逐页截图 + 抓控制台报错），见下 |
+
+## 小程序端自动验收
+
+`scripts/mp-check.mjs` 会连上微信开发者工具的自动化端口，逐个页面截图并收集控制台报错，
+用来在不开编辑器的情况下确认小程序真的跑得起来。
+
+**前置（只需做一次）**：开发者工具 → 设置 → 安全设置 → **服务端口** → 打开。
+注意这是**工具级**设置，不在「详情 → 本地设置」里（那是项目级的编译设置）。
+
+```bash
+# 1. 另开一个终端，保持 watch 编译
+npm run dev:mp-weixin
+
+# 2. 以自动化模式打开项目（会复用已开着的开发者工具）
+"D:/微信web开发者工具/cli.bat" auto \
+  --project "$(pwd)/dist/dev/mp-weixin" --auto-port 9420
+
+# 3. 跑验收
+node scripts/mp-check.mjs
+```
+
+截图输出到 `.mp-shots/`（已 gitignore），报错打印到终端。
+
+> **不要用 `automator.launch()`。** Node 18.20.2+ 为修 CVE-2024-27980 禁止 `spawn`
+> 直接执行 `.bat`/`.cmd`，而 automator 内部正是 `spawn cli.bat` —— 在 Node 22 上必然
+> 失败，并且报错信息（`please make sure cliPath is correctly specified`）与真实原因
+> 无关，很容易误导。所以改成由外部拉起 CLI、脚本只负责 `connect()`。
 
 ## 目录结构
 

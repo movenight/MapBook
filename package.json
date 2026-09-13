@@ -26,6 +26,7 @@
     "@dcloudio/uni-cli-shared": "3.0.0-5020420260813003",
     "@dcloudio/vite-plugin-uni": "3.0.0-5020420260813003",
     "@vue/runtime-core": "^3.5.13",
+    "miniprogram-automator": "^0.12.1",
     "sass": "^1.104.1",
     "typescript": "^5.7.2",
     "vite": "5.2.8",

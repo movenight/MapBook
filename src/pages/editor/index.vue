@@ -7,7 +7,12 @@
         小程序 <map> 是原生组件，浮层压不住它，所以搜索展开时整个换掉地图，
         而不是把结果列表做成浮层。
       -->
-      <MapView v-if="!searchExpanded" @pick="onMapPick" @markertap="onMarkerTap" />
+      <MapView
+        v-if="!searchExpanded"
+        class="editor__map"
+        @pick="onMapPick"
+        @markertap="onMarkerTap"
+      />
       <view v-else class="editor__placeholder">
         <text class="editor__placeholder-text">从上方搜索结果中选择一个地点</text>
       </view>
@@ -232,6 +237,12 @@ function onWaypointDelete(id: string): void {
   overflow: hidden;
 }
 
+/* 这个类会落在 MapView 的宿主节点上，由它给地图定高（理由见 MapView.vue） */
+.editor__map {
+  flex: 1;
+  min-height: 0;
+}
+
 .editor__placeholder {
   display: flex;
   align-items: center;
@@ -253,6 +264,7 @@ function onWaypointDelete(id: string): void {
   background: rgba(0, 0, 0, 0.6);
   border-radius: 40rpx;
   transform: translateX(-50%);
+  white-space: nowrap;
 }
 
 .editor__tip-text {
@@ -304,6 +316,8 @@ function onWaypointDelete(id: string): void {
   align-items: center;
   gap: $mb-gap-md;
   padding: $mb-gap-sm $mb-gap-md;
+  /* 手机底部有 Home 指示条，webview 会一直延伸到屏幕底边，不避让会压住状态栏文字 */
+  padding-bottom: calc(#{$mb-gap-sm} + env(safe-area-inset-bottom));
   border-top: 1rpx solid $mb-border-light;
 }
 
