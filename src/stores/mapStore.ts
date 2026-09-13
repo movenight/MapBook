@@ -1,40 +1,54 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { useTripStore } from './tripStore'
 
+/** 默认视野：北京 */
+const DEFAULT_CENTER = { lng: 116.397428, lat: 39.90923 }
+const DEFAULT_SCALE = 11
+
+export interface MapCenter {
+  lng: number
+  lat: number
+}
+
+/**
+ * 地图视图状态。
+ *
+ * 小程序端的 <map> 是声明式组件（longitude / latitude / scale 全靠属性驱动），
+ * 所以这里只存视图参数，不再持有地图实例 —— 原 Web 版把 AMap.Map 实例塞进
+ * store 的做法在小程序里没有对应物。
+ */
 export const useMapStore = defineStore('map', () => {
-  const mapInstance = ref<AMap.Map | null>(null)
-  const clickPosition = ref<[number, number] | null>(null)
+  const center = ref<MapCenter>({ ...DEFAULT_CENTER })
+  const scale = ref(DEFAULT_SCALE)
 
-  function setMapInstance(instance: AMap.Map | null) {
-    mapInstance.value = instance
+  /**
+   * 用户点了地图、但还没决定这一点是什么类型的坐标。
+   * 有值时弹出类型选择面板 —— 相当于原 Web 版的右键菜单。
+   */
+  const pendingPoint = ref<MapCenter | null>(null)
+
+  function moveTo(point: MapCenter, nextScale?: number): void {
+    center.value = { ...point }
+    if (typeof nextScale === 'number') {
+      scale.value = nextScale
+    }
   }
 
-  function setClickPosition(pos: [number, number]) {
-    clickPosition.value = pos
+  function resetView(): void {
+    center.value = { ...DEFAULT_CENTER }
+    scale.value = DEFAULT_SCALE
   }
 
-  function addWaypoint(poi: { lng: number; lat: number; name: string; address: string }) {
-    const tripStore = useTripStore()
-    tripStore.addWaypoint({
-      id: crypto.randomUUID(),
-      tripId: tripStore.currentTrip.id,
-      dayIndex: tripStore.activeDayIndex,
-      orderIndex: 0,
-      name: poi.name,
-      address: poi.address,
-      lng: poi.lng,
-      lat: poi.lat,
-      type: 'waypoint',
-      notes: '',
-    })
+  function setPendingPoint(point: MapCenter | null): void {
+    pendingPoint.value = point
   }
 
   return {
-    mapInstance,
-    clickPosition,
-    setMapInstance,
-    setClickPosition,
-    addWaypoint,
+    center,
+    scale,
+    pendingPoint,
+    moveTo,
+    resetView,
+    setPendingPoint,
   }
 })

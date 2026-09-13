@@ -1,27 +1,39 @@
-import type { Waypoint } from './waypoint'
+export type TripStatus = 'draft' | 'published'
 
+/**
+ * 路书（一次旅行的规划）
+ *
+ * 注意：地点不存在 Trip 上，而是通过 tripId 关联的独立集合。
+ * 这样做是为了匹配云开发的文档型数据库，避免嵌套数组带来的读写放大。
+ */
 export interface Trip {
+  /** 云开发文档 _id；新建时为 '' */
   id: string
-  user_id?: string
   title: string
   description: string
-  cover_lng?: number
-  cover_lat?: number
-  cover_zoom?: number
-  start_date?: string
-  end_date?: string
+  /** 天数，至少为 1 */
   dayCount: number
-  waypoints: Waypoint[]
-  waypointRoutes: Map<number, RouteData>
   status: TripStatus
-  created_at?: string
-  updated_at?: string
+  /** 格式 YYYY-MM-DD，未设置为 '' */
+  startDate: string
+  endDate: string
+  coverLng?: number
+  coverLat?: number
+  coverZoom?: number
+  /** 毫秒时间戳 */
+  createdAt?: number
+  updatedAt?: number
 }
 
-export interface RouteData {
-  polyline: [number, number][]
-  distance: number
-  duration: number
+/** 新建路书时的空白对象 */
+export function createEmptyTrip(): Trip {
+  return {
+    id: '',
+    title: '',
+    description: '',
+    dayCount: 1,
+    status: 'draft',
+    startDate: '',
+    endDate: '',
+  }
 }
-
-export type TripStatus = 'draft' | 'published'

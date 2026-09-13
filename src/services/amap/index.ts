@@ -1,0 +1,7 @@
+export { amapGet, parseLocation } from './request'
+export { inputTips } from './tips'
+export type { PoiTip } from './tips'
+export { reverseGeocode } from './geo'
+export type { ReverseGeocodeResult } from './geo'
+export { drivingRoute } from './route'
+export type { LatLng, MapPoint, RouteResult } from './route'

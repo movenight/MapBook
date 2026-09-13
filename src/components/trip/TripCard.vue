@@ -1,92 +1,94 @@
 <template>
-  <div class="trip-card" @click="$emit('click')">
-    <div class="card-cover">
-      <span class="card-placeholder">MapBook</span>
-    </div>
-    <div class="card-body">
-      <h3 class="card-title">{{ trip.title || '未命名路书' }}</h3>
-      <p v-if="trip.description" class="card-desc">{{ trip.description }}</p>
-      <div class="card-meta">
-        <span>{{ trip.dayCount || 1 }} 天</span>
-        <span>{{ formattedDate }}</span>
-      </div>
-    </div>
-  </div>
+  <view class="trip-card" @click="emit('click', trip.id)">
+    <view class="trip-card__cover">
+      <text class="trip-card__cover-text">MapBook</text>
+    </view>
+
+    <view class="trip-card__body">
+      <text class="trip-card__title">{{ trip.title || '未命名路书' }}</text>
+      <text v-if="trip.description" class="trip-card__desc">{{ trip.description }}</text>
+
+      <view class="trip-card__meta">
+        <text class="trip-card__meta-item">{{ trip.dayCount }} 天</text>
+        <text class="trip-card__meta-item">{{ updatedLabel }}</text>
+      </view>
+    </view>
+  </view>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Trip } from '@/types/trip'
-import dayjs from 'dayjs'
+import { formatDate } from '@/utils/format'
 
-const props = defineProps<{
-  trip: Trip
+const props = defineProps<{ trip: Trip }>()
+
+const emit = defineEmits<{
+  (e: 'click', id: string): void
 }>()
 
-defineEmits<{
-  click: []
-}>()
-
-const formattedDate = computed(() => {
-  if (props.trip.updated_at) {
-    return dayjs(props.trip.updated_at).format('YYYY-MM-DD')
-  }
-  return ''
+const updatedLabel = computed(() => {
+  const label = formatDate(props.trip.updatedAt)
+  return label ? `更新于 ${label}` : '尚未保存'
 })
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .trip-card {
-  border-radius: 8px;
+  margin-bottom: $mb-gap-md;
+  background: $mb-bg-white;
+  border-radius: $mb-radius-md;
   overflow: hidden;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  transition: box-shadow 0.2s;
 
-  &:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  &:active {
+    background: $mb-bg-lighter;
   }
 }
 
-.card-cover {
-  height: 140px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.trip-card__cover {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 200rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.card-placeholder {
-  font-size: 24px;
+.trip-card__cover-text {
+  font-size: 36rpx;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 4rpx;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.card-body {
-  padding: 16px;
+.trip-card__body {
+  padding: $mb-gap-md;
 }
 
-.card-title {
-  margin: 0 0 6px;
-  font-size: 16px;
-  color: #333;
+.trip-card__title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: $mb-text-primary;
 }
 
-.card-desc {
-  margin: 0 0 10px;
-  font-size: 13px;
-  color: #999;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+.trip-card__desc {
+  display: block;
+  margin-top: $mb-gap-xs;
+  font-size: 26rpx;
+  color: $mb-text-secondary;
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.card-meta {
+.trip-card__meta {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
-  color: #bbb;
+  margin-top: $mb-gap-md;
+}
+
+.trip-card__meta-item {
+  font-size: 24rpx;
+  color: $mb-text-disabled;
 }
 </style>

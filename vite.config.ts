@@ -1,29 +1,11 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import uni from '@dcloudio/vite-plugin-uni'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [uni()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
-    },
-  },
-  server: {
-    port: 3000,
-    open: true,
-  },
-  build: {
-    target: 'es2020',
-    minify: 'esbuild',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'element-plus': ['element-plus'],
-          'supabase': ['@supabase/supabase-js'],
-        },
-      },
+      '@': '/src',
     },
   },
 })
